@@ -1,0 +1,15 @@
+---
+import ArticleView from '../../components/ArticleView.astro';
+import { getArticles, type Article } from '../../data/articles';
+
+// New articles (written in this repo) live at /articles/<slug>/.
+// Imported WordPress posts keep their old URL; see src/pages/[slug].astro.
+export async function getStaticPaths() {
+  const articles = (await getArticles()).filter((a) => !a.data.legacy);
+  return articles.map((article) => ({ params: { slug: article.id }, props: { article } }));
+}
+
+const { article } = Astro.props as { article: Article };
+---
+
+<ArticleView article={article} />

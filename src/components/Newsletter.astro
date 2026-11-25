@@ -1,0 +1,77 @@
+---
+import { SITE } from '../data/site';
+---
+
+<section class="container section" aria-labelledby="news-h">
+  <div class="news">
+    <div class="copy">
+      <h2 id="news-h">One new script in your inbox each week</h2>
+      <p>A beginner-friendly article plus a tiny challenge. Unsubscribe any time.</p>
+    </div>
+    <form method="post" action={SITE.newsletterAction || undefined} data-configured={SITE.newsletterAction ? 'yes' : 'no'}>
+      <label for="nl-email" class="sr-only">Email address</label>
+      <input id="nl-email" name="email" type="email" required placeholder="you@example.com" autocomplete="email" />
+      <button type="submit" class="btn btn-primary">Subscribe</button>
+      <p class="status" role="status" aria-live="polite"></p>
+    </form>
+  </div>
+</section>
+
+<script>
+  document.querySelectorAll<HTMLFormElement>('form[data-configured="no"]').forEach((form) => {
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const status = form.querySelector('.status');
+      if (status) status.textContent = 'The newsletter is not open yet. Check back soon!';
+    });
+  });
+</script>
+
+<style>
+  .news {
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: clamp(24px, 5vw, 40px);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px 32px;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .copy {
+    flex: 1 1 360px;
+  }
+  h2 {
+    margin: 0 0 8px;
+    font-size: clamp(24px, 3.5vw, 30px);
+  }
+  .copy p {
+    margin: 0;
+    color: var(--muted);
+  }
+  form {
+    flex: 1 1 360px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  input {
+    flex: 1 1 220px;
+    min-height: 48px;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: 10px;
+    color: var(--text);
+    padding: 12px 16px;
+    font: 16px var(--font-sans);
+  }
+  .status {
+    flex-basis: 100%;
+    margin: 0;
+    font-size: 14px;
+    color: var(--muted);
+  }
+  .status:empty {
+    display: none;
+  }
+</style>

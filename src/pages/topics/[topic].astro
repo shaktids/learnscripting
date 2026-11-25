@@ -1,0 +1,33 @@
+---
+import Base from '../../layouts/Base.astro';
+import ArticleCard from '../../components/ArticleCard.astro';
+import { getTopics, type Topic } from '../../data/articles';
+
+export async function getStaticPaths() {
+  return (await getTopics()).map((topic) => ({ params: { topic: topic.slug }, props: { topic } }));
+}
+
+const { topic } = Astro.props as { topic: Topic };
+---
+
+<Base title={topic.name} description={`${topic.articles.length} articles about ${topic.name} on LearnScripting.`}>
+  <section class="container section">
+    <nav aria-label="Breadcrumb" class="crumbs"><a href="/topics/">All topics</a> / {topic.name}</nav>
+    <h1 class="section-title">{topic.name}</h1>
+    <p class="section-lead">{topic.articles.length} articles, newest first.</p>
+    <div class="grid grid-3">
+      {topic.articles.map((a) => <ArticleCard article={a} />)}
+    </div>
+  </section>
+</Base>
+
+<style>
+  .crumbs {
+    font-size: 14px;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+  .crumbs a {
+    color: var(--muted);
+  }
+</style>

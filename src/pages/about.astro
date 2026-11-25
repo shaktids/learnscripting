@@ -1,0 +1,30 @@
+---
+import Base from '../layouts/Base.astro';
+import { SITE } from '../data/site';
+---
+
+<Base title="About" description={`What ${SITE.name} is and who it is for.`}>
+  <section class="container section about">
+    <h1 class="section-title">About {SITE.name}</h1>
+    <p>
+      {SITE.name} teaches scripting to people who have never written a line of code. Every article is
+      written in plain English, explains each line, and ends with something you can try yourself.
+    </p>
+    <p>
+      We cover four languages: <a href="/python/">Python</a>, <a href="/bash/">Bash</a>,
+      <a href="/powershell/">PowerShell</a> and <a href="/javascript/">JavaScript</a>. If you are not sure
+      where to begin, start with <a href="/articles/what-is-a-script/">What is a script, anyway?</a>
+    </p>
+    <!-- TODO: add who writes the site and how to get in touch. -->
+  </section>
+</Base>
+
+<style>
+  .about {
+    max-width: 760px;
+  }
+  .about p {
+    font-size: 18px;
+    color: var(--text-soft);
+  }
+</style>

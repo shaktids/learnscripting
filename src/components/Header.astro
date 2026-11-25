@@ -1,0 +1,127 @@
+---
+import { LANGUAGES, SITE } from '../data/site';
+
+const path = Astro.url.pathname;
+const links = [
+  ...LANGUAGES.map((l) => ({ href: `/${l.id}/`, label: l.name })),
+  { href: '/topics/', label: 'Topics' },
+  { href: '/articles/', label: 'All articles' },
+];
+---
+
+<header class="site-header">
+  <nav class="container nav" aria-label="Main">
+    <a href="/" class="logo">
+      <span class="logo-mark" aria-hidden="true">&gt;_</span>
+      {SITE.name}
+    </a>
+    <ul class="nav-links">
+      {
+        links.map((l) => (
+          <li>
+            <a href={l.href} aria-current={path.startsWith(l.href) ? 'page' : undefined}>
+              {l.label}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+    <div class="nav-actions">
+      <form action="/articles/" method="get" role="search">
+        <label for="site-search" class="sr-only">Search articles</label>
+        <input id="site-search" name="q" type="search" placeholder="Search articles…" />
+      </form>
+      <a href="/articles/what-is-a-script/" class="btn btn-primary">Start learning</a>
+    </div>
+  </nav>
+</header>
+
+<style>
+  .site-header {
+    border-bottom: 1px solid var(--border);
+  }
+  .nav {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 24px;
+    padding-block: 14px;
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text);
+    text-decoration: none;
+    font: 700 20px var(--font-display);
+  }
+  .logo-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: var(--accent);
+    color: var(--on-accent);
+    font: 600 15px var(--font-mono);
+  }
+  .nav-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    flex: 1 1 auto;
+  }
+  .nav-links a {
+    display: block;
+    padding: 10px 12px;
+    color: var(--muted-2);
+    text-decoration: none;
+    font-size: 15px;
+    border-radius: 8px;
+  }
+  .nav-links a:hover,
+  .nav-links a[aria-current='page'] {
+    color: var(--text);
+    background: var(--surface);
+  }
+  .nav-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+  }
+  input[type='search'] {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    padding: 10px 14px;
+    min-height: 44px;
+    font: 15px var(--font-sans);
+    width: 200px;
+  }
+  .nav-actions .btn {
+    font-size: 15px;
+  }
+  @media (max-width: 720px) {
+    .nav-links {
+      order: 3;
+      flex-basis: 100%;
+      overflow-x: auto;
+      flex-wrap: nowrap;
+    }
+    .nav-links a {
+      white-space: nowrap;
+    }
+    .nav-actions {
+      margin-left: auto;
+    }
+    input[type='search'] {
+      width: 150px;
+    }
+  }
+</style>

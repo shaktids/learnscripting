@@ -1,0 +1,19 @@
+---
+import type { GetStaticPaths, Page } from 'astro';
+import ArticleList from '../../../components/ArticleList.astro';
+import { getArticles, getTopics, PER_PAGE, type Article } from '../../../data/articles';
+
+
+
+// Pages 2, 3, ... of /articles/. Page 1 is src/pages/articles/index.astro.
+export const getStaticPaths = (async ({ paginate }) => {
+  const articles = await getArticles();
+  return paginate(articles, { pageSize: PER_PAGE }).filter((p) => String(p.params.page) !== '1');
+}) satisfies GetStaticPaths;
+
+const page = Astro.props.page as Page<Article>;
+// paginate() builds URLs from this route; point page 1 back at /articles/.
+if (page.url.prev === '/articles/page/1' || page.url.prev === '/articles/page/1/') page.url.prev = '/articles/';
+---
+
+<ArticleList page={page} topics={await getTopics()} />

@@ -1,0 +1,110 @@
+---
+/**
+ * Everything served at /<slug>/:
+ *   - language track pages   (/python/, /bash/, ...)
+ *   - imported WordPress posts, at their old permalink (/<post-name>/)
+ *   - imported WordPress pages (/about-us/, /privacy-policy-4/, ...)
+ */
+import { render } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import ArticleView from '../components/ArticleView.astro';
+import ArticleCard from '../components/ArticleCard.astro';
+import { LANGUAGES, type Language } from '../data/site';
+import { getArticles, getPages, type Article, type Page } from '../data/articles';
+
+type Props =
+  | { kind: 'language'; language: Language }
+  | { kind: 'article'; article: Article }
+  | { kind: 'page'; page: Page };
+
+export async function getStaticPaths() {
+  const langIds = new Set<string>(LANGUAGES.map((l) => l.id));
+  const articles = (await getArticles()).filter((a) => a.data.legacy && !langIds.has(a.id));
+  const taken = new Set([...langIds, ...articles.map((a) => a.id)]);
+  const pages = (await getPages()).filter((p) => !taken.has(p.id));
+  return [
+    ...LANGUAGES.map((language) => ({ params: { slug: language.id }, props: { kind: 'language', language } })),
+    ...articles.map((article) => ({ params: { slug: article.id }, props: { kind: 'article', article } })),
+    ...pages.map((page) => ({ params: { slug: page.id }, props: { kind: 'page', page } })),
+  ];
+}
+
+const props = Astro.props as Props;
+
+let langArticles: Article[] = [];
+if (props.kind === 'language') {
+  langArticles = (await getArticles()).filter((a) => a.data.lang === props.language.id);
+}
+const PageContent = props.kind === 'page' ? (await render(props.page)).Content : null;
+---
+
+{props.kind === 'article' && <ArticleView article={props.article} />}
+
+{
+  props.kind === 'language' && (
+    <Base title={`Learn ${props.language.name}`} description={props.language.intro}>
+      <section class="container section">
+        <p class="kicker" style={`color: ${props.language.tint}`}>
+          {props.language.glyph} · {props.language.name} track
+        </p>
+        <h1 class="lang-title">Learn {props.language.name} scripting</h1>
+        <p class="intro">{props.language.intro}</p>
+        <p class="hint">
+          New to coding altogether? Read the <a href="/articles/what-is-a-script/">beginner path</a> first.
+        </p>
+      </section>
+      <section class="container section" aria-labelledby="list-h">
+        <h2 id="list-h" class="section-title">
+          {props.language.name} articles <span class="count">({langArticles.length})</span>
+        </h2>
+        {langArticles.length > 0 ? (
+          <div class="grid grid-3">
+            {langArticles.map((a) => (
+              <ArticleCard article={a} />
+            ))}
+          </div>
+        ) : (
+          <p class="section-lead">The first {props.language.name} articles are being written. Check back soon!</p>
+        )}
+      </section>
+    </Base>
+  )
+}
+
+{
+  props.kind === 'page' && PageContent && (
+    <Base title={props.page.data.title} description={props.page.data.description}>
+      <article class="container section page">
+        <h1 class="lang-title">{props.page.data.title}</h1>
+        <div class="prose">
+          <PageContent />
+        </div>
+      </article>
+    </Base>
+  )
+}
+
+<style>
+  .lang-title {
+    margin: 12px 0 16px;
+    font-size: clamp(32px, 5vw, 50px);
+    letter-spacing: -0.02em;
+  }
+  .intro {
+    margin: 0 0 12px;
+    max-width: 680px;
+    font-size: clamp(17px, 2vw, 19px);
+    color: var(--muted);
+  }
+  .hint {
+    margin: 0;
+    color: var(--muted);
+  }
+  .count {
+    color: var(--muted);
+    font-weight: 500;
+  }
+  .page {
+    max-width: 808px;
+  }
+</style>

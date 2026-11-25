@@ -1,0 +1,26 @@
+---
+import type { Page } from 'astro';
+import ArticleList from '../../components/ArticleList.astro';
+import { getArticles, getTopics, PER_PAGE, type Article } from '../../data/articles';
+
+
+const articles = await getArticles();
+const page: Page<Article> = {
+  data: articles.slice(0, PER_PAGE),
+  start: 0,
+  end: Math.min(PER_PAGE, articles.length) - 1,
+  size: PER_PAGE,
+  total: articles.length,
+  currentPage: 1,
+  lastPage: Math.max(1, Math.ceil(articles.length / PER_PAGE)),
+  url: {
+    current: '/articles/',
+    prev: undefined,
+    next: articles.length > PER_PAGE ? '/articles/page/2/' : undefined,
+    first: undefined,
+    last: undefined,
+  },
+};
+---
+
+<ArticleList page={page} topics={await getTopics()} />

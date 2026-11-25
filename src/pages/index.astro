@@ -1,0 +1,217 @@
+---
+import Base from '../layouts/Base.astro';
+import HelloTabs from '../components/HelloTabs.astro';
+import ArticleCard from '../components/ArticleCard.astro';
+import Newsletter from '../components/Newsletter.astro';
+import { LANGUAGES, SITE } from '../data/site';
+import { articleUrl, getArticles, getPath } from '../data/articles';
+
+const latest = (await getArticles()).slice(0, 6);
+const path = await getPath();
+const first = path[0];
+---
+
+<Base>
+  <section class="container hero">
+    <div class="hero-copy">
+      <p class="kicker">// for complete beginners</p>
+      <h1>{SITE.tagline}</h1>
+      <p class="lead">
+        Plain-English articles on Python, Bash, PowerShell and JavaScript. No jargon, no setup
+        headaches. Every lesson ends with a script you actually wrote.
+      </p>
+      <div class="cta">
+        {first && <a href={articleUrl(first)} class="btn btn-primary">Read: {first.data.title}</a>}
+        <a href="/articles/" class="btn btn-ghost">Browse all articles</a>
+      </div>
+    </div>
+    <div class="hero-demo">
+      <HelloTabs />
+    </div>
+  </section>
+
+  <section class="container section" aria-labelledby="langs-h">
+    <h2 id="langs-h" class="section-title">Pick a language</h2>
+    <p class="section-lead">Not sure? Start with Python. It reads almost like English.</p>
+    <div class="grid grid-4">
+      {
+        LANGUAGES.map((l) => (
+          <a href={`/${l.id}/`} class="card lang-card">
+            <span class="glyph" style={`color: ${l.tint}`} aria-hidden="true">{l.glyph}</span>
+            <span class="name">{l.name}</span>
+            <span class="blurb">{l.blurb}</span>
+            <span class="use">Good for: {l.use}</span>
+            <span class="go">Start the {l.name} track →</span>
+          </a>
+        ))
+      }
+    </div>
+  </section>
+
+  {
+    path.length > 0 && (
+      <section class="container section" aria-labelledby="path-h">
+        <div class="card path">
+          <div>
+            <h2 id="path-h" class="section-title">Never coded before? Follow this path.</h2>
+            <p class="section-lead path-lead">
+              {path.length} short articles, in order. Each builds on the last.
+            </p>
+          </div>
+          <ol class="steps">
+            {path.map((a) => (
+              <li>
+                <span class="step-n">Step {a.data.step}</span>
+                <a href={articleUrl(a)}>{a.data.title}</a>
+                <span class="step-desc">{a.data.description}</span>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
+    )
+  }
+
+  <section class="container section" aria-labelledby="latest-h">
+    <div class="row-head">
+      <h2 id="latest-h" class="section-title">Latest articles</h2>
+      <a href="/articles/">See all articles →</a>
+    </div>
+    <div class="grid grid-3">
+      {latest.map((a) => <ArticleCard article={a} />)}
+    </div>
+  </section>
+
+  <Newsletter />
+</Base>
+
+<style>
+  .hero {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 48px 56px;
+    align-items: center;
+    padding-block: clamp(48px, 9vw, 88px) 56px;
+  }
+  .hero-copy {
+    flex: 1 1 440px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  .hero-demo {
+    flex: 1 1 420px;
+    min-width: 0;
+  }
+  h1 {
+    margin: 0;
+    font-size: clamp(38px, 6vw, 60px);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+  }
+  .lead {
+    margin: 0;
+    font-size: clamp(17px, 2vw, 19px);
+    color: var(--muted);
+    max-width: 540px;
+  }
+  .cta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .lang-card {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 24px;
+    text-decoration: none;
+    color: var(--text);
+  }
+  .lang-card:hover {
+    border-color: var(--border-strong);
+    color: var(--text);
+  }
+  .glyph {
+    font: 600 22px var(--font-mono);
+  }
+  .name {
+    font: 700 22px var(--font-display);
+  }
+  .blurb {
+    color: var(--muted);
+    font-size: 15px;
+  }
+  .use {
+    margin-top: auto;
+    font-size: 14px;
+    color: var(--muted-2);
+  }
+  .go {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--accent);
+  }
+
+  .path {
+    border-radius: 18px;
+    padding: clamp(24px, 5vw, 40px);
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+  .path-lead {
+    margin: 0;
+  }
+  .steps {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 16px;
+  }
+  .steps li {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 20px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+  .step-n {
+    font: 14px var(--font-mono);
+    color: var(--accent);
+  }
+  .steps a {
+    font: 700 19px/1.3 var(--font-display);
+    color: var(--text);
+    text-decoration: none;
+  }
+  .steps a:hover {
+    color: var(--accent);
+  }
+  .step-desc {
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  .row-head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+  .row-head .section-title {
+    margin: 0;
+  }
+  .row-head a {
+    font-weight: 600;
+    font-size: 15px;
+  }
+</style>

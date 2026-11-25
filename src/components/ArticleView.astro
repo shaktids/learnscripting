@@ -1,0 +1,286 @@
+---
+import { render } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import Newsletter from './Newsletter.astro';
+import { LANG_TINT } from '../data/site';
+import {
+  articleLabel,
+  articleUrl,
+  formatDate,
+  getArticles,
+  getPath,
+  readingMinutes,
+  slugify,
+  type Article,
+} from '../data/articles';
+
+interface Props {
+  article: Article;
+}
+
+const { article } = Astro.props;
+const { Content, headings } = await render(article);
+const { title, description, lang, level, pubDate, updatedDate, step, author, categories, legacy } = article.data;
+
+const toc = headings.filter((h) => h.depth === 2);
+const path = await getPath();
+const all = await getArticles();
+
+// Previous / next: the beginner path for path articles, otherwise the same track
+// (language, or main topic for "other" articles), oldest first.
+let prev: Article | undefined;
+let next: Article | undefined;
+if (step) {
+  const i = path.findIndex((a) => a.id === article.id);
+  prev = path[i - 1];
+  next = path[i + 1];
+} else {
+  const sameTrack = (a: Article) =>
+    lang === 'other' ? a.data.lang === 'other' && a.data.categories[0] === categories[0] : a.data.lang === lang;
+  const track = all
+    .filter((a) => sameTrack(a) && !a.data.step)
+    .sort((a, b) => a.data.pubDate.valueOf() - b.data.pubDate.valueOf());
+  const i = track.findIndex((a) => a.id === article.id);
+  prev = track[i - 1];
+  next = track[i + 1];
+}
+const label = articleLabel(article);
+const trackHref =
+  lang === 'general' ? '/articles/' : lang === 'other' ? (categories[0] ? `/topics/${slugify(categories[0])}/` : '/topics/') : `/${lang}/`;
+const shown = updatedDate ?? pubDate;
+---
+
+<Base title={title} description={description} type="article">
+  <div class="container layout">
+    <article class="post">
+      <nav aria-label="Breadcrumb" class="crumbs">
+        <a href="/">Home</a> / <a href={trackHref}>{label}</a>
+        {step && <> / <span>Step {step}</span></>}
+      </nav>
+      <div class="tags">
+        <a href={trackHref} class="tag" style={`color: ${LANG_TINT[lang]}`}>{label}</a>
+        {
+          categories
+            .filter((c) => c !== label)
+            .map((c) => (
+              <a href={`/topics/${slugify(c)}/`} class="tag">
+                {c}
+              </a>
+            ))
+        }
+        {!legacy && <span class="tag">{level === 'beginner' ? 'Beginner' : 'Intermediate'}</span>}
+        <span class="tag">{readingMinutes(article.body)} min read</span>
+      </div>
+      <h1>{title}</h1>
+      {!legacy && <p class="standfirst">{description}</p>}
+      <p class="byline">
+        By {author} · {updatedDate ? 'Updated' : 'Published'}
+        <time datetime={shown.toISOString()}>{formatDate(shown)}</time>
+      </p>
+
+      <div class="prose">
+        <Content />
+      </div>
+
+      {
+        (prev || next) && (
+          <nav aria-label="Lesson navigation" class="pager">
+            {prev ? (
+              <a href={articleUrl(prev)}>
+                <span class="dir">← Previous{prev.data.step ? `: Step ${prev.data.step}` : ''}</span>
+                <span class="t">{prev.data.title}</span>
+              </a>
+            ) : (
+              <span />
+            )}
+            {next && (
+              <a href={articleUrl(next)} class="next">
+                <span class="dir">Next{next.data.step ? `: Step ${next.data.step}` : ''} →</span>
+                <span class="t">{next.data.title}</span>
+              </a>
+            )}
+          </nav>
+        )
+      }
+    </article>
+
+    <aside class="side" aria-label="Article sidebar">
+      {
+        toc.length > 0 && (
+          <nav class="card box" aria-labelledby="toc-h">
+            <p id="toc-h" class="box-h">On this page</p>
+            <ul>
+              {toc.map((h) => (
+                <li>
+                  <a href={`#${h.slug}`}>{h.text}</a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        )
+      }
+      {
+        path.length > 0 && (
+          <nav class="card box" aria-labelledby="path-h">
+            <p id="path-h" class="box-h">Beginner path</p>
+            <ol>
+              {path.map((a) => (
+                <li>
+                  <a href={articleUrl(a)} aria-current={a.id === article.id ? 'page' : undefined}>
+                    {a.data.title}
+                  </a>
+                </li>
+              ))}
+            </ol>
+          </nav>
+        )
+      }
+    </aside>
+  </div>
+  <Newsletter />
+</Base>
+
+<script>
+  // Add a "Copy" button to every highlighted code block.
+  document.querySelectorAll<HTMLPreElement>('.prose pre').forEach((pre) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'code-wrap';
+    pre.replaceWith(wrap);
+    wrap.appendChild(pre);
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'copy-btn';
+    btn.textContent = 'Copy';
+    btn.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(pre.innerText);
+        btn.textContent = 'Copied!';
+      } catch {
+        btn.textContent = 'Press Ctrl+C';
+      }
+      setTimeout(() => (btn.textContent = 'Copy'), 1800);
+    });
+    wrap.appendChild(btn);
+  });
+</script>
+
+<style>
+  .layout {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 48px 56px;
+    align-items: flex-start;
+    padding-block: 40px 24px;
+  }
+  .post {
+    flex: 999 1 560px;
+    min-width: 0;
+    max-width: 760px;
+  }
+  .crumbs {
+    font-size: 14px;
+    color: var(--muted);
+    margin-bottom: 20px;
+  }
+  .crumbs a {
+    color: var(--muted);
+  }
+  .crumbs span {
+    color: var(--muted-2);
+  }
+  h1 {
+    margin: 16px 0;
+    font-size: clamp(34px, 5vw, 48px);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+  .standfirst {
+    margin: 0 0 16px;
+    font-size: clamp(18px, 2.2vw, 20px);
+    color: var(--muted);
+  }
+  .byline {
+    margin: 0 0 32px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+    color: var(--muted);
+  }
+
+  .pager {
+    margin-top: 48px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+  }
+  .pager a {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 18px 20px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    text-decoration: none;
+    color: var(--text);
+  }
+  .pager a:hover {
+    border-color: var(--border-strong);
+  }
+  .pager .next {
+    border-color: var(--accent);
+    text-align: right;
+  }
+  .dir {
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .t {
+    font-weight: 600;
+  }
+
+  .side {
+    flex: 1 1 260px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .box {
+    padding: 20px;
+  }
+  .box-h {
+    margin: 0 0 10px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .box ul {
+    list-style: none;
+    padding: 0;
+  }
+  .box ul,
+  .box ol {
+    margin: 0;
+    font-size: 15px;
+  }
+  .box ol {
+    padding-left: 20px;
+    color: var(--muted);
+  }
+  .box a {
+    display: block;
+    padding: 5px 0;
+    color: var(--muted-2);
+    text-decoration: none;
+  }
+  .box a:hover {
+    color: var(--text);
+  }
+  .box a[aria-current='page'] {
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+</style>

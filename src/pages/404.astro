@@ -1,0 +1,21 @@
+---
+import Base from '../layouts/Base.astro';
+---
+
+<Base title="Page not found">
+  <section class="container section nf">
+    <p class="kicker">$ cd /this-page</p>
+    <h1 class="section-title">No such file or directory</h1>
+    <p class="section-lead">The page you were looking for doesn't exist, or it has moved.</p>
+    <a href="/" class="btn btn-primary">Go home</a>
+  </section>
+</Base>
+
+<style>
+  .nf {
+    padding-block: 96px;
+  }
+  .nf .kicker {
+    margin-bottom: 12px;
+  }
+</style>
