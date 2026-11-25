@@ -7,6 +7,8 @@ export const SITE = {
   // TODO: paste your newsletter provider's form action URL (Buttondown, ConvertKit, etc.).
   // While empty, the signup form is shown but submitting does nothing.
   newsletterAction: '',
+  // Google AdSense publisher ID (also in public/ads.txt). Set to '' to turn ads off.
+  adsenseClient: 'ca-pub-7856118129660697',
 };
 
 export type LangId = 'python' | 'bash' | 'powershell' | 'javascript';
